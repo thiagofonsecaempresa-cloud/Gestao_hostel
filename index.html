@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173f35">
+  <meta name="description" content="Gestão de custos e estimativa de custo por diária para hostel.">
+  <title>Gestão do Hostel</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <style>
+    :root{color-scheme:light;--bg:#f3f6f3;--card:#fff;--ink:#20312b;--muted:#66776e;--green:#1d5b49;--green-soft:#e2f0e8;--line:#dce5de;--warn:#fff7e7;--warn-ink:#6d4d18;--shadow:0 8px 24px rgba(25,55,43,.06)}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    header{background:linear-gradient(135deg,#153e35,#26735a);color:#fff;padding:28px 18px 30px}
+    .wrap{max-width:960px;margin:auto}
+    .eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:.75rem;font-weight:800;opacity:.8}
+    h1{font-size:clamp(1.9rem,5vw,2.5rem);line-height:1.1;margin:8px 0}
+    header p{max-width:640px;margin:0;color:#e1eee7}
+    main{max-width:960px;margin:auto;padding:16px;display:grid;gap:16px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:var(--shadow)}
+    h2{font-size:1.12rem;margin:0 0 5px}
+    .sub{color:var(--muted);font-size:.9rem;margin:0 0 17px}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+    label{display:block;font-size:.88rem;font-weight:700;margin-bottom:6px}
+    input,select{font:inherit;color:var(--ink);background:#fff;border:1px solid #cbd7ce;border-radius:10px;padding:11px 12px;width:100%;min-width:0}
+    input:focus,select:focus,button:focus-visible{outline:3px solid #c6e7d4;outline-offset:2px;border-color:var(--green)}
+    .hint{font-size:.8rem;color:var(--muted)}
+    .section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:18px 0 10px}
+    .cost-list{display:grid;gap:9px}
+    .cost-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(110px,.75fr) auto;gap:9px;align-items:center;padding:10px;background:#f8faf8;border:1px solid var(--line);border-radius:12px}
+    .cost-name{font-weight:700;font-size:.9rem;overflow-wrap:anywhere}
+    .cost-type{display:block;color:var(--muted);font-size:.75rem;font-weight:400}
+    .cost-row input{padding:9px 10px}
+    button{font:inherit;font-weight:750;border:0;border-radius:10px;padding:11px 14px;cursor:pointer}
+    .primary{background:var(--green);color:white}.secondary{background:var(--green-soft);color:var(--green)}.quiet{background:#edf1ed;color:#44564c}.danger{background:#fbe9e4;color:#9b3524;padding:8px 11px}
+    .actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px}
+    .actions button{flex:0 0 auto}
+    .results{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
+    .metric{background:#f5f8f5;border:1px solid var(--line);border-radius:14px;padding:15px;min-width:0}
+    .metric .label{font-size:.8rem;color:var(--muted);font-weight:700}
+    .metric .value{font-size:clamp(1.15rem,3.7vw,1.75rem);font-weight:850;letter-spacing:-.03em;margin-top:5px;overflow-wrap:anywhere}
+    .metric.featured{background:var(--green-soft);border-color:#b9d9c6}
+    .note{background:var(--warn);border:1px solid #f0dfb9;color:var(--warn-ink);padding:12px 14px;border-radius:12px;font-size:.88rem;margin-top:13px}
+    .summary-line{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
+    .summary-line:last-child{border:0}.summary-line strong{text-align:right}
+    .empty{padding:13px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);font-size:.88rem}
+    footer{max-width:960px;margin:auto;padding:0 18px 30px;color:var(--muted);font-size:.8rem}
+    #importFile{display:none}
+    @media(max-width:640px){main{padding:12px}.card{padding:16px}.grid{grid-template-columns:1fr}.results{grid-template-columns:1fr}.cost-row{grid-template-columns:minmax(0,1fr) minmax(100px,.7fr) auto;gap:7px}.cost-row input{font-size:.92rem;padding:9px 7px}.actions button{flex:1 1 100%}.section-head{align-items:flex-start;flex-direction:column;gap:4px}}
+  </style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="eyebrow">Painel de custos</div>
+  <h1>Gestão do Hostel</h1>
+  <p>Organize as despesas do hostel e estime quanto custa cada quarto por diária. Os cálculos são atualizados conforme você preenche os valores.</p>
+</div></header>
+<main>
+  <section class="card">
+    <h2>1. Estrutura do hostel</h2>
+    <p class="sub">Informe a quantidade de quartos e a ocupação média estimada.</p>
+    <div class="grid">
+      <div><label for="rooms">Número total de quartos</label><input id="rooms" type="number" min="1" step="1" value="10" inputmode="numeric"></div>
+      <div><label for="occupancy">Ocupação média (%)</label><input id="occupancy" type="number" min="0" max="100" step="1" value="60" inputmode="numeric"></div>
+      <div><label for="days">Dias considerados no mês</label><input id="days" type="number" min="1" max="31" step="1" value="30" inputmode="numeric"></div>
+      <div><label for="currency">Moeda</label><select id="currency"><option value="BRL">Real (R$)</option><option value="USD">Dólar (US$)</option><option value="EUR">Euro (€)</option></select></div>
+    </div>
+    <p class="hint">Neste primeiro modelo, a ocupação é aplicada ao número de quartos, não à quantidade de camas. Assim, os dois quartos com capacidade para mais de um casal não distorcem a estimativa por quarto.</p>
+  </section>
+
+  <section class="card">
+    <h2>2. Custos mensais</h2>
+    <p class="sub">Preencha apenas as despesas que existem no seu hostel. Os valores começam em zero.</p>
+    <div class="section-head"><strong>Custos fixos</strong><span class="hint">Normalmente não dependem do número de hóspedes</span></div>
+    <div id="fixedCosts" class="cost-list"></div>
+    <div class="section-head"><strong>Custos variáveis</strong><span class="hint">Podem aumentar conforme a ocupação e o faturamento</span></div>
+    <div id="variableCosts" class="cost-list"></div>
+
+    <div class="section-head"><strong>Adicionar uma despesa comum</strong></div>
+    <div class="grid">
+      <div><label for="presetCost">Despesa</label><select id="presetCost"><option value="">Escolha uma despesa...</option></select></div>
+      <div><label for="presetType">Classificação</label><select id="presetType"><option value="fixed">Custo fixo</option><option value="variable">Custo variável</option></select></div>
+    </div>
+    <div class="actions"><button type="button" class="secondary" id="addPreset">＋ Adicionar despesa selecionada</button></div>
+
+    <div class="section-head"><strong>Adicionar outra despesa</strong></div>
+    <div class="grid">
+      <div><label for="customName">Nome da despesa</label><input id="customName" type="text" placeholder="Ex.: jardinagem, gás, contador" maxlength="80"></div>
+      <div><label for="customType">Tipo de custo</label><select id="customType"><option value="fixed">Custo fixo</option><option value="variable">Custo variável</option></select></div>
+    </div>
+    <div class="actions">
+      <button type="button" class="secondary" id="addFixed">＋ Adicionar custo fixo</button>
+      <button type="button" class="secondary" id="addVariable">＋ Adicionar custo variável</button>
+      <button type="button" class="primary" id="addCustom">Adicionar custo personalizado</button>
+    </div>
+    <p id="formMessage" class="hint" role="status" aria-live="polite">Para adicionar uma despesa personalizada, digite o nome, escolha o tipo e toque em “Adicionar custo personalizado”.</p>
+  </section>
+
+  <section class="card">
+    <h2>3. Resultado estimado</h2>
+    <p class="sub">O custo por diária considera as despesas mensais e a ocupação informada.</p>
+    <div class="results">
+      <div class="metric"><div class="label">Custos totais no mês</div><div class="value" id="totalCost">R$ 0,00</div></div>
+      <div class="metric"><div class="label">Custo por quarto disponível / diária</div><div class="value" id="availableCost">R$ 0,00</div></div>
+      <div class="metric featured"><div class="label">Custo por quarto ocupado / diária</div><div class="value" id="occupiedCost">R$ 0,00</div></div>
+    </div>
+    <div class="note" id="calculationNote">Preencha os custos para estimar o custo por diária.</div>
+    <div style="margin-top:17px">
+      <div class="summary-line"><span>Diárias de quarto disponíveis no mês</span><strong id="availableNights">0</strong></div>
+      <div class="summary-line"><span>Diárias de quarto ocupadas estimadas</span><strong id="occupiedNights">0</strong></div>
+      <div class="summary-line"><span>Total de custos fixos</span><strong id="fixedTotal">R$ 0,00</strong></div>
+      <div class="summary-line"><span>Total de custos variáveis</span><strong id="variableTotal">R$ 0,00</strong></div>
+    </div>
+    <p class="hint">Atenção: este é o custo médio operacional por quarto, não um preço de venda sugerido. Impostos sobre faturamento e comissões podem ser variáveis; registre-os como variáveis quando fizer sentido para a operação. Ainda será necessário definir a margem de lucro e considerar despesas que não estejam cadastradas.</p>
+  </section>
+
+  <section class="card">
+    <h2>4. Backup e dados</h2>
+    <p class="sub">Os dados são salvos neste navegador. Exporte um backup regularmente para não depender de um único aparelho.</p>
+    <div class="actions">
+      <button type="button" class="primary" id="exportJson">Baixar backup JSON</button>
+      <button type="button" class="secondary" id="importBtn">Importar backup JSON</button>
+      <button type="button" class="secondary" id="exportCsv">Exportar custos CSV</button>
+      <button type="button" class="quiet" id="resetBtn">Restaurar exemplo</button>
+    </div>
+    <input id="importFile" type="file" accept=".json,application/json">
+    <p id="saveStatus" class="hint" role="status" aria-live="polite">Salvamento automático ativado neste navegador.</p>
+  </section>
+</main>
+<footer>Gestão do Hostel · versão inicial · Os dados ficam no navegador deste aparelho, não são sincronizados automaticamente entre dispositivos.</footer>
+<script>
+(() => {
+  'use strict';
+  const STORAGE_KEY = 'gestaoHostelDataV2';
+  const defaults = [
+    {id:'electricity',name:'Luz / energia elétrica',type:'fixed',amount:0},
+    {id:'water',name:'Água',type:'fixed',amount:0},
+    {id:'internet',name:'Internet e telefone',type:'fixed',amount:0},
+    {id:'rent',name:'Aluguel / financiamento',type:'fixed',amount:0},
+    {id:'taxes-fixed',name:'Impostos e taxas fixas',type:'fixed',amount:0},
+    {id:'payroll',name:'Salários / equipe',type:'fixed',amount:0},
+    {id:'accounting',name:'Contabilidade',type:'fixed',amount:0},
+    {id:'insurance',name:'Seguro',type:'fixed',amount:0},
+    {id:'software',name:'Sistemas e assinaturas',type:'fixed',amount:0},
+    {id:'property-tax',name:'IPTU / taxas municipais',type:'fixed',amount:0},
+    {id:'cleaning',name:'Limpeza e lavanderia',type:'variable',amount:0},
+    {id:'amenities',name:'Itens de higiene e amenities',type:'variable',amount:0},
+    {id:'maintenance',name:'Manutenção e reparos',type:'variable',amount:0},
+    {id:'supplies',name:'Materiais de consumo',type:'variable',amount:0},
+    {id:'platforms',name:'Comissões de plataformas',type:'variable',amount:0},
+    {id:'card-fees',name:'Taxas de cartão',type:'variable',amount:0},
+    {id:'food',name:'Café da manhã / alimentação',type:'variable',amount:0},
+    {id:'linen',name:'Reposição de enxoval',type:'variable',amount:0}
+  ];
+  const presets = [
+    {name:'Luz / energia elétrica',type:'fixed'},
+    {name:'Água',type:'fixed'},
+    {name:'Internet e telefone',type:'fixed'},
+    {name:'Aluguel / financiamento',type:'fixed'},
+    {name:'Impostos e taxas fixas',type:'fixed'},
+    {name:'Salários / equipe',type:'fixed'},
+    {name:'Contabilidade',type:'fixed'},
+    {name:'Seguro',type:'fixed'},
+    {name:'Sistemas e assinaturas',type:'fixed'},
+    {name:'IPTU / taxas municipais',type:'fixed'},
+    {name:'Gás',type:'variable'},
+    {name:'Limpeza e lavanderia',type:'variable'},
+    {name:'Itens de higiene e amenities',type:'variable'},
+    {name:'Materiais de consumo',type:'variable'},
+    {name:'Manutenção e reparos',type:'variable'},
+    {name:'Comissões de plataformas',type:'variable'},
+    {name:'Taxas de cartão',type:'variable'},
+    {name:'Café da manhã / alimentação',type:'variable'},
+    {name:'Reposição de enxoval',type:'variable'},
+    {name:'Impostos sobre faturamento',type:'variable'},
+    {name:'Outros custos variáveis',type:'variable'}
+  ];
+  const $ = id => document.getElementById(id);
+  let costs = defaults.map(c => ({...c}));
+  const currency = () => $('currency').value || 'BRL';
+  const money = n => new Intl.NumberFormat('pt-BR',{style:'currency',currency:currency()}).format(Number.isFinite(n)?n:0);
+  const cleanNumber = value => Math.max(0, Number(value) || 0);
+  const uid = () => 'cost-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8);
+  function message(text, error=false) {
+    $('formMessage').textContent = text;
+    $('formMessage').style.color = error ? '#9b3524' : '';
+  }
+  function save() {
+    try {
+      const data = {
+        version: 2, rooms: $('rooms').value, occupancy: $('occupancy').value,
+        days: $('days').value, currency: currency(), costs
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      $('saveStatus').textContent = 'Salvo automaticamente neste navegador.';
+    } catch (err) {
+      $('saveStatus').textContent = 'O navegador bloqueou o salvamento local. Baixe um backup JSON para guardar os dados.';
+    }
+  }
+  function renderPresets() {
+    const select = $('presetCost');
+    select.replaceChildren(new Option('Escolha uma despesa...', ''));
+    presets.forEach((item, index) => {
+      const opt = new Option(item.name + ' · ' + (item.type === 'fixed' ? 'Fixo' : 'Variável'), String(index));
+      select.add(opt);
+    });
+    select.addEventListener('change', () => {
+      const p = presets[Number(select.value)];
+      if (p) $('presetType').value = p.type;
+    });
+  }
+  function renderCosts() {
+    ['fixed','variable'].forEach(type => {
+      const root = $(type === 'fixed' ? 'fixedCosts' : 'variableCosts');
+      root.replaceChildren();
+      const list = costs.filter(c => c.type === type);
+      if (!list.length) {
+        const empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = 'Nenhum custo cadastrado nesta categoria ainda.';
+        root.append(empty);
+      }
+      list.forEach(cost => {
+        const row = document.createElement('div');
+        row.className = 'cost-row';
+        const name = document.createElement('div');
+        const title = document.createElement('span');
+        title.className = 'cost-name';
+        title.textContent = cost.name;
+        const sub = document.createElement('span');
+        sub.className = 'cost-type';
+        sub.textContent = cost.custom ? 'Despesa personalizada' : 'Valor mensal';
+        name.append(title, sub);
+        const input = document.createElement('input');
+        input.type = 'number'; input.min = '0'; input.step = '0.01'; input.inputMode = 'decimal';
+        input.value = Number(cost.amount) || 0;
+        input.setAttribute('aria-label', 'Valor mensal de ' + cost.name);
+        input.addEventListener('input', () => {
+          cost.amount = cleanNumber(input.value);
+          calculate(); save();
+        });
+        const actions = document.createElement('div');
+        if (cost.custom) {
+          const remove = document.createElement('button');
+          remove.type = 'button'; remove.className = 'danger'; remove.textContent = 'Excluir';
+          remove.setAttribute('aria-label','Excluir ' + cost.name);
+          remove.addEventListener('click', () => {
+            costs = costs.filter(c => c.id !== cost.id);
+            renderCosts(); calculate(); save();
+            message('Despesa removida.');
+          });
+          actions.append(remove);
+        }
+        row.append(name, input, actions);
+        root.append(row);
+      });
+    });
+  }
+  function calculate() {
+    const fixed = costs.filter(c => c.type === 'fixed').reduce((s,c) => s + cleanNumber(c.amount), 0);
+    const variable = costs.filter(c => c.type === 'variable').reduce((s,c) => s + cleanNumber(c.amount), 0);
+    const total = fixed + variable;
+    const rooms = Math.floor(cleanNumber($('rooms').value));
+    const days = Math.min(31, Math.max(1, Math.floor(cleanNumber($('days').value) || 1)));
+    const occupancy = Math.min(100, cleanNumber($('occupancy').value)) / 100;
+    const available = rooms * days;
+    const occupied = available * occupancy;
+    $('totalCost').textContent = money(total);
+    $('fixedTotal').textContent = money(fixed);
+    $('variableTotal').textContent = money(variable);
+    $('availableNights').textContent = available.toLocaleString('pt-BR');
+    $('occupiedNights').textContent = occupied.toLocaleString('pt-BR',{maximumFractionDigits:1});
+    $('availableCost').textContent = available > 0 ? money(total / available) : '—';
+    $('occupiedCost').textContent = occupied > 0 ? money(total / occupied) : '—';
+    $('calculationNote').textContent = occupied > 0
+      ? `Com ${Math.round(occupancy*100)}% de ocupação, o custo médio estimado é ${money(total/occupied)} por quarto ocupado por diária.`
+      : 'A ocupação está em zero. O custo por diária ocupada será calculado quando você informar uma ocupação maior que zero.';
+    save();
+  }
+  function addCustom(typeOverride) {
+    const name = $('customName').value.trim();
+    const type = typeOverride || $('customType').value;
+    if (!name) {
+      message('Digite o nome da despesa antes de adicionar.', true);
+      $('customName').focus();
+      return;
+    }
+    if (costs.some(c => c.name.trim().toLocaleLowerCase('pt-BR') === name.toLocaleLowerCase('pt-BR'))) {
+      message('Já existe uma despesa com esse nome. Preencha o valor na lista existente.', true);
+      return;
+    }
+    costs.push({id:uid(), name, type, amount:0, custom:true});
+    $('customName').value = '';
+    $('customType').value = 'fixed';
+    renderCosts(); calculate();
+    message(`“${name}” foi adicionada aos custos ${type === 'fixed' ? 'fixos' : 'variáveis'}.`);
+  }
+  function addPreset() {
+    const val = $('presetCost').value;
+    if (val === '') { message('Selecione uma despesa na lista primeiro.', true); $('presetCost').focus(); return; }
+    const p = presets[Number(val)];
+    if (!p) return;
+    if (costs.some(c => c.name.toLocaleLowerCase('pt-BR') === p.name.toLocaleLowerCase('pt-BR'))) {
+      message('Essa despesa já está cadastrada. Basta preencher o valor na lista.', true);
+      return;
+    }
+    costs.push({id:uid(), name:p.name, type:$('presetType').value || p.type, amount:0, custom:true});
+    renderCosts(); calculate();
+    $('presetCost').value = '';
+    message(`“${p.name}” foi adicionada à lista.`);
+  }
+  function download(filename, content, mime) {
+    const blob = new Blob([content], {type:mime});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1200);
+  }
+  function exportJson() {
+    const data = {version:2, exportedAt:new Date().toISOString(), rooms:$('rooms').value, occupancy:$('occupancy').value, days:$('days').value, currency:currency(), costs};
+    download('backup-gestao-hostel.json', JSON.stringify(data,null,2), 'application/json');
+  }
+  function exportCsv() {
+    const rows = [['Tipo','Despesa','Valor mensal'], ...costs.map(c => [c.type === 'fixed' ? 'Fixo' : 'Variável', c.name, (cleanNumber(c.amount)).toFixed(2).replace('.',',')]), ['', 'TOTAL', costs.reduce((s,c)=>s+cleanNumber(c.amount),0).toFixed(2).replace('.',',')]];
+    const csv = '\ufeff' + rows.map(row => row.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(';')).join('\r\n');
+    download('custos-hostel.csv', csv, 'text/csv;charset=utf-8');
+  }
+  function importJson(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        if (!data || !Array.isArray(data.costs)) throw new Error('JSON inválido');
+        costs = data.costs.map((c,i) => ({
+          id:String(c.id || uid()), name:String(c.name || `Custo ${i+1}`),
+          type:c.type === 'variable' ? 'variable' : 'fixed',
+          amount:cleanNumber(c.amount), custom:!!c.custom
+        }));
+        ['rooms','occupancy','days','currency'].forEach(id => {
+          if (data[id] !== undefined) $(id).value = data[id];
+        });
+        renderCosts(); calculate();
+        message('Backup importado com sucesso.');
+      } catch (err) {
+        message('Não foi possível importar. Escolha um backup JSON válido deste aplicativo.', true);
+      }
+      $('importFile').value = '';
+    };
+    reader.readAsText(file);
+  }
+  function restore() {
+    try {
+      let raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) raw = localStorage.getItem('gestaoHostelDataV1');
+      if (!raw) return;
+      const d = JSON.parse(raw);
+      if (Array.isArray(d.costs)) {
+        const loaded = d.costs.map((c,i) => ({
+          id:String(c.id || uid()), name:String(c.name || `Custo ${i+1}`),
+          type:c.type === 'variable' ? 'variable' : 'fixed',
+          amount:cleanNumber(c.amount), custom:!!c.custom
+        }));
+        const names = new Set(loaded.map(c=>c.name.toLocaleLowerCase('pt-BR')));
+        costs = loaded;
+        defaults.forEach(c => {
+          if (!names.has(c.name.toLocaleLowerCase('pt-BR'))) costs.push({...c});
+        });
+      }
+      ['rooms','occupancy','days','currency'].forEach(id => { if (d[id] !== undefined) $(id).value = d[id]; });
+    } catch (err) {
+      $('saveStatus').textContent = 'Não foi possível recuperar os dados anteriores. Você pode importar um backup JSON.';
+    }
+  }
+  function reset() {
+    if (!confirm('Restaurar o exemplo inicial? Isso substitui os valores atuais salvos neste navegador.')) return;
+    costs = defaults.map(c=>({...c}));
+    $('rooms').value = '10'; $('occupancy').value = '60'; $('days').value = '30'; $('currency').value = 'BRL';
+    renderCosts(); calculate(); message('Exemplo inicial restaurado.');
+  }
+  $('addPreset').addEventListener('click', addPreset);
+  $('addCustom').addEventListener('click', () => addCustom());
+  $('addFixed').addEventListener('click', () => { $('customType').value='fixed'; addCustom('fixed'); });
+  $('addVariable').addEventListener('click', () => { $('customType').value='variable'; addCustom('variable'); });
+  $('customName').addEventListener('keydown', e => { if (e.key === 'Enter') addCustom(); });
+  ['rooms','occupancy','days','currency'].forEach(id => $(id).addEventListener('input', calculate));
+  $('exportJson').addEventListener('click', exportJson);
+  $('exportCsv').addEventListener('click', exportCsv);
+  $('importBtn').addEventListener('click', () => $('importFile').click());
+  $('importFile').addEventListener('change', e => { if (e.target.files && e.target.files[0]) importJson(e.target.files[0]); });
+  $('resetBtn').addEventListener('click', reset);
+  restore(); renderPresets(); renderCosts(); calculate();
+})();
+</script>
+</body>
+</html>
