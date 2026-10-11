@@ -4,8 +4,8 @@
   "description": "Gestão de custos e estimativa de custo por diária.",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#f3f6f3",
-  "theme_color": "#173f35",
+  "background_color": "#f2f6fc",
+  "theme_color": "#163d78",
   "lang": "pt-BR",
   "icons": [
     {

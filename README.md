@@ -1,4 +1,4 @@
-# Gestão do Hostel
+# Gestão do Hostel · Thiago Fonseca
 
 Aplicativo web estático em HTML, CSS e JavaScript, preparado para publicação no GitHub Pages.
 
@@ -22,3 +22,6 @@ Aplicativo web estático em HTML, CSS e JavaScript, preparado para publicação 
 ## Observação sobre os dados
 
 O aplicativo não possui servidor nem banco de dados remoto. Os dados ficam no armazenamento local do navegador e não são sincronizados automaticamente entre dispositivos. Use o backup JSON para transferir os dados.
+
+
+Versão 2.0: identidade visual azul e despesas personalizadas guardadas também na lista de opções, neste navegador e nos backups JSON.
