@@ -129,57 +129,90 @@
     <p id="saveStatus" class="hint" role="status" aria-live="polite">Salvamento automático ativado neste navegador.</p>
   </section>
 </main>
-<footer>Gestão do Hostel · desenvolvido por Thiago Fonseca · versão 2.0 · Os dados ficam no navegador deste aparelho, não são sincronizados automaticamente entre dispositivos.</footer>
+<footer>Gestão do Hostel · desenvolvido por Thiago Fonseca · versão 2.1 · Os dados ficam no navegador deste aparelho, não são sincronizados automaticamente entre dispositivos.</footer>
 <script>
 (() => {
   'use strict';
   const STORAGE_KEY = 'gestaoHostelDataV2';
   const PRESETS_KEY = 'gestaoHostelCustomPresetsV1';
-  const defaults = [
-    {id:'electricity',name:'Luz / energia elétrica',type:'fixed',amount:0},
-    {id:'water',name:'Água',type:'fixed',amount:0},
-    {id:'internet',name:'Internet e telefone',type:'fixed',amount:0},
-    {id:'rent',name:'Aluguel / financiamento',type:'fixed',amount:0},
-    {id:'taxes-fixed',name:'Impostos e taxas fixas',type:'fixed',amount:0},
-    {id:'payroll',name:'Salários / equipe',type:'fixed',amount:0},
-    {id:'accounting',name:'Contabilidade',type:'fixed',amount:0},
-    {id:'insurance',name:'Seguro',type:'fixed',amount:0},
-    {id:'software',name:'Sistemas e assinaturas',type:'fixed',amount:0},
-    {id:'property-tax',name:'IPTU / taxas municipais',type:'fixed',amount:0},
-    {id:'cleaning',name:'Limpeza e lavanderia',type:'variable',amount:0},
-    {id:'amenities',name:'Itens de higiene e amenities',type:'variable',amount:0},
-    {id:'maintenance',name:'Manutenção e reparos',type:'variable',amount:0},
-    {id:'supplies',name:'Materiais de consumo',type:'variable',amount:0},
-    {id:'platforms',name:'Comissões de plataformas',type:'variable',amount:0},
-    {id:'card-fees',name:'Taxas de cartão',type:'variable',amount:0},
-    {id:'food',name:'Café da manhã / alimentação',type:'variable',amount:0},
-    {id:'linen',name:'Reposição de enxoval',type:'variable',amount:0}
-  ];
-  const presets = [
-    {name:'Luz / energia elétrica',type:'fixed'},
+  const categoryList = [
+    // Fixos informados pelo hostel
+    {name:'Pró-labore',type:'fixed'},
     {name:'Água',type:'fixed'},
-    {name:'Internet e telefone',type:'fixed'},
-    {name:'Aluguel / financiamento',type:'fixed'},
-    {name:'Impostos e taxas fixas',type:'fixed'},
-    {name:'Salários / equipe',type:'fixed'},
-    {name:'Contabilidade',type:'fixed'},
+    {name:'Contador',type:'fixed'},
+    {name:'Prod Limpeza',type:'fixed'},
+    {name:'Prod Higiene',type:'fixed'},
+    {name:'Prod Lavanderia',type:'fixed'},
+    {name:'Lavanderia',type:'fixed'},
+    {name:'Luz',type:'fixed'},
+    {name:'Internet',type:'fixed'},
+    {name:'IMPOSTOS (IPTU/DARF/DANF)',type:'fixed'},
+    {name:'Sistema',type:'fixed'},
+    {name:'Faxina',type:'fixed'},
+    {name:'Aluguel',type:'fixed'},
     {name:'Seguro',type:'fixed'},
-    {name:'Sistemas e assinaturas',type:'fixed'},
-    {name:'IPTU / taxas municipais',type:'fixed'},
+    {name:'Salário Funcionários',type:'fixed'},
+    {name:'Itens para venda',type:'fixed'},
+    // Variáveis informados pelo hostel
+    {name:'Material Obra',type:'variable'},
+    {name:'Itens para Quartos',type:'variable'},
+    {name:'Mão Obra (pedreiro/elet/pint)',type:'variable'},
+    {name:'Itens Áreas Comuns',type:'variable'},
+    {name:'Cartões Investimento',type:'variable'},
+    {name:'Boletos Investimentos',type:'variable'},
+    {name:'Outros',type:'variable'},
+    {name:'Roupa de cama e banho (reposição)',type:'variable'},
+    {name:'HOTEL 2',type:'variable'},
+    {name:'Não especificados',type:'variable'},
+    {name:'Café da manhã',type:'variable'},
+    {name:'Empréstimos',type:'variable'},
+    // Outras categorias úteis que já existiam, sem repetir as equivalentes
     {name:'Gás',type:'variable'},
-    {name:'Limpeza e lavanderia',type:'variable'},
-    {name:'Itens de higiene e amenities',type:'variable'},
-    {name:'Materiais de consumo',type:'variable'},
     {name:'Manutenção e reparos',type:'variable'},
     {name:'Comissões de plataformas',type:'variable'},
     {name:'Taxas de cartão',type:'variable'},
-    {name:'Café da manhã / alimentação',type:'variable'},
-    {name:'Reposição de enxoval',type:'variable'},
     {name:'Impostos sobre faturamento',type:'variable'},
-    {name:'Outros custos variáveis',type:'variable'}
+    {name:'Materiais de consumo',type:'variable'}
   ];
+  const defaults = categoryList.map((item, index) => ({
+    id:'category-' + (index + 1), name:item.name, type:item.type, amount:0
+  }));
+  const presets = categoryList.map(item => ({name:item.name, type:item.type}));
   const $ = id => document.getElementById(id);
   const basePresetNames = new Set(presets.map(p => p.name.toLocaleLowerCase('pt-BR')));
+  const categoryAliases = {
+    'luz / energia elétrica':'Luz',
+    'internet e telefone':'Internet',
+    'aluguel / financiamento':'Aluguel',
+    'impostos e taxas fixas':'IMPOSTOS (IPTU/DARF/DANF)',
+    'salários / equipe':'Salário Funcionários',
+    'contabilidade':'Contador',
+    'sistemas e assinaturas':'Sistema',
+    'iptu / taxas municipais':'IMPOSTOS (IPTU/DARF/DANF)',
+    'limpeza e lavanderia':'Lavanderia',
+    'itens de higiene e amenities':'Prod Higiene',
+    'café da manhã / alimentação':'Café da manhã',
+    'reposição de enxoval':'Roupa de cama e banho (reposição)',
+    'outros custos variáveis':'Outros'
+  };
+  const canonicalName = name => categoryAliases[String(name || '').trim().toLocaleLowerCase('pt-BR')] || String(name || '').trim();
+  const categoryTypeFor = name => {
+    const found = presets.find(p => p.name.toLocaleLowerCase('pt-BR') === canonicalName(name).toLocaleLowerCase('pt-BR'));
+    return found ? found.type : null;
+  };
+  function normalizeCustomPresets(items) {
+    const result = [];
+    const seen = new Set(basePresetNames);
+    (Array.isArray(items) ? items : []).forEach(item => {
+      if (!item || !String(item.name || '').trim()) return;
+      const name = canonicalName(item.name);
+      const key = name.toLocaleLowerCase('pt-BR');
+      if (seen.has(key)) return;
+      seen.add(key);
+      result.push({name, type:categoryTypeFor(name) || (item.type === 'variable' ? 'variable' : 'fixed')});
+    });
+    return result;
+  }
   let customPresets = [];
   let costs = defaults.map(c => ({...c}));
   const currency = () => $('currency').value || 'BRL';
@@ -349,7 +382,7 @@
           type:c.type === 'variable' ? 'variable' : 'fixed',
           amount:cleanNumber(c.amount), custom:!!c.custom
         }));
-        if (Array.isArray(data.customPresets)) customPresets = data.customPresets.filter(p => p && p.name).map(p => ({name:String(p.name),type:p.type === 'variable' ? 'variable' : 'fixed'}));
+        if (Array.isArray(data.customPresets)) customPresets = normalizeCustomPresets(data.customPresets);
         else customPresets = costs.filter(c => c.custom && !basePresetNames.has(c.name.toLocaleLowerCase('pt-BR'))).map(c => ({name:c.name,type:c.type}));
         localStorage.setItem(PRESETS_KEY, JSON.stringify(customPresets));
         ['rooms','occupancy','days','currency'].forEach(id => {
@@ -370,18 +403,27 @@
       if (!raw) raw = localStorage.getItem('gestaoHostelDataV1');
       if (!raw) return;
       const d = JSON.parse(raw);
-      try { const savedPresets = JSON.parse(localStorage.getItem(PRESETS_KEY) || 'null'); if (Array.isArray(savedPresets)) customPresets = savedPresets.filter(p => p && p.name).map(p => ({name:String(p.name),type:p.type === 'variable' ? 'variable' : 'fixed'})); } catch (_) {}
-      if (Array.isArray(d.customPresets)) customPresets = d.customPresets.filter(p => p && p.name).map(p => ({name:String(p.name),type:p.type === 'variable' ? 'variable' : 'fixed'}));
+      try { const savedPresets = JSON.parse(localStorage.getItem(PRESETS_KEY) || 'null'); if (Array.isArray(savedPresets)) customPresets = normalizeCustomPresets(savedPresets); } catch (_) {}
+      if (Array.isArray(d.customPresets)) customPresets = normalizeCustomPresets(d.customPresets);
       if (Array.isArray(d.costs)) {
-        const loaded = d.costs.map((c,i) => ({
-          id:String(c.id || uid()), name:String(c.name || `Custo ${i+1}`),
-          type:c.type === 'variable' ? 'variable' : 'fixed',
-          amount:cleanNumber(c.amount), custom:!!c.custom
-        }));
+        const loaded = [];
+        d.costs.forEach((c,i) => {
+          const originalName = String(c.name || `Custo ${i+1}`);
+          const name = canonicalName(originalName);
+          const canonicalType = categoryTypeFor(name);
+          const type = canonicalType || (c.type === 'variable' ? 'variable' : 'fixed');
+          const existing = loaded.find(item => item.name.toLocaleLowerCase('pt-BR') === name.toLocaleLowerCase('pt-BR'));
+          if (existing) {
+            existing.amount += cleanNumber(c.amount);
+            existing.custom = existing.custom && !!c.custom;
+          } else {
+            loaded.push({id:String(c.id || uid()), name, type, amount:cleanNumber(c.amount), custom:!!c.custom});
+          }
+        });
         const names = new Set(loaded.map(c=>c.name.toLocaleLowerCase('pt-BR')));
         costs = loaded;
         loaded.filter(c => c.custom && !basePresetNames.has(c.name.toLocaleLowerCase('pt-BR'))).forEach(c => {
-          if (!customPresets.some(p => p.name.toLocaleLowerCase('pt-BR') === c.name.toLocaleLowerCase('pt-BR'))) customPresets.push({name:c.name,type:c.type});
+          if (!customPresets.some(p => p.name.toLocaleLowerCase('pt-BR') === c.name.toLocaleLowerCase('pt-BR')) && !basePresetNames.has(c.name.toLocaleLowerCase('pt-BR'))) customPresets.push({name:c.name,type:c.type});
         });
         defaults.forEach(c => {
           if (!names.has(c.name.toLocaleLowerCase('pt-BR'))) costs.push({...c});

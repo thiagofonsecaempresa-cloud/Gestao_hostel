@@ -25,3 +25,6 @@ O aplicativo não possui servidor nem banco de dados remoto. Os dados ficam no a
 
 
 Versão 2.0: identidade visual azul e despesas personalizadas guardadas também na lista de opções, neste navegador e nos backups JSON.
+
+
+Versão 2.1: categorias fixas e variáveis organizadas conforme a lista do hostel, com migração dos nomes equivalentes para evitar duplicatas.
